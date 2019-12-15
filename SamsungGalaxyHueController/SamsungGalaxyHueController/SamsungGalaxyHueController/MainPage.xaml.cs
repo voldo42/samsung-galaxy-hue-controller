@@ -33,10 +33,11 @@ namespace SamsungGalaxyHueController
 
                     var lightSwitch = new Switch
                     {
-                        IsToggled = group.state.any_on
+                        IsToggled = group.state.any_on,
+                        BindingContext = group
                     };
                     lightSwitch.Toggled += OnToggled;
-                                    
+
                     Children.Add(new CirclePage
                     {
                         Content = new StackLayout
@@ -69,11 +70,14 @@ namespace SamsungGalaxyHueController
         {
             try
             {
-                await DisplayAlert("Woohoo", $"Toggle! {e.Value} {sender}", "OK");
+                var sexyJimbob = (Switch)sender;
+                var group = (Group)sexyJimbob.BindingContext;
+
+                HueHelper.SetGroupAction(group.id, e.Value);
             }
-            catch
+            catch(Exception ex)
             {
-                await DisplayAlert("Error", $"Toggle failed :(", "OK");
+                await DisplayAlert("Error", $"Toggle failed. {ex.Message}", "OK");
             }
         }
 

@@ -1,24 +1,17 @@
 ﻿using Newtonsoft.Json;
-using RestSharp;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
-using Tizen.Wearable.CircularUI.Forms;
-using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
 
 namespace SamsungGalaxyHueController
 {
     public class HueHelper
     {
         static string bridgeUrl = "https://192.168.1.79/api/ebsbNXG4i2Ty-phG-Cnrs4MlGhQZ4y4DWAdFLkZA";
-        static List<Group> groups;
-        static List<Scene> scenes;
 
         public static List<Group> GetGroups()
         {
@@ -86,6 +79,35 @@ namespace SamsungGalaxyHueController
 
             scenesList.Add(new Scene { name = "" });
             return scenesList;
+        }
+
+        public static void SetGroupAction(int groupId, bool state)
+        {
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback +=
+                    (sender, cert, chain, sslPolicyErrors) => true;
+
+                byte[] payload = Encoding.ASCII.GetBytes(new JObject(new JProperty("on", state)).ToString());
+                
+                WebRequest request = WebRequest.Create($"{bridgeUrl}/groups/{groupId}/action");
+                request.Credentials = CredentialCache.DefaultCredentials;
+                request.Method = "PUT";
+                request.ContentLength = payload.Length;
+                request.ContentType = "application/json";
+
+                Stream dataStream = request.GetRequestStream();
+                dataStream.Write(payload, 0, payload.Length);
+                dataStream.Close();
+
+                WebResponse response = request.GetResponse();
+                // Stream responseStream = response.GetResponseStream(); handle error later
+                response.Close();
+            }
+            catch (Exception)
+            {
+
+            }
         }
     }
 }
