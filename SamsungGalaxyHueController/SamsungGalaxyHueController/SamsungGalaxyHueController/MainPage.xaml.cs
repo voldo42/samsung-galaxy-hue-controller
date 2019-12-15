@@ -17,57 +17,101 @@ namespace SamsungGalaxyHueController
         {
             InitializeComponent();
 
-            var groups = HueHelper.GetGroups();
-            var anyLightsOn = HueHelper.AnyLightsOn();
-            groups.Add(new Group { id = 0, name = "All", type = "", state = new GroupState { any_on = anyLightsOn } });
-
-            foreach (var group in groups.OrderBy(g => g.id))
+            List<Group> groups = null;
+            try
             {
-                try
+                groups = HueHelper.GetGroups();
+            }
+            catch (Exception ex)
+            {
+                Alert("Error", $"Failed to load groups. {ex.Message}", "OK");
+            }
+
+            CreateAllPage();
+            CreateGroupsPages(groups);
+            SelectedItem = Children[1];
+        }
+
+        private void CreateGroupsPages(List<Group> groups)
+        {
+            foreach (var group in groups.OrderBy(g => g.type).ThenBy(g => g.name))
+            {
+                var groupLabel = new Label
                 {
-                    var groupLabel = new Label
-                    {
-                        Text = group.name,
-                        VerticalOptions = LayoutOptions.CenterAndExpand,
-                        HorizontalOptions = LayoutOptions.CenterAndExpand
-                    };
+                    Text = group.name,
+                    FontSize = 12,
+                    VerticalOptions = LayoutOptions.CenterAndExpand,
+                    HorizontalOptions = LayoutOptions.CenterAndExpand
+                };
 
-                    var groupTypeLabel = new Label
-                    {
-                        Text = group.type,
-                        VerticalOptions = LayoutOptions.CenterAndExpand,
-                        HorizontalOptions = LayoutOptions.CenterAndExpand
-                    };
+                var groupTypeLabel = new Label
+                {
+                    Text = $"{group.type}",
+                    FontSize = 8,
+                    VerticalOptions = LayoutOptions.CenterAndExpand,
+                    HorizontalOptions = LayoutOptions.CenterAndExpand
+                };
 
-                    var lightSwitch = new Switch
-                    {
-                        IsToggled = group.state.any_on,
-                        BindingContext = group
-                    };
-                    lightSwitch.Toggled += OnToggled;
+                var lightSwitch = new Switch
+                {
+                    IsToggled = group.state.any_on,
+                    BindingContext = group
+                };
+                lightSwitch.Toggled += OnToggled;
 
-                    Children.Add(new CirclePage
+                Children.Add(new CirclePage
+                {
+                    Content = new StackLayout
                     {
-                        Content = new StackLayout
-                        {
-                            VerticalOptions = LayoutOptions.StartAndExpand,
-                            Padding = 50,
-                            Children =
+                        VerticalOptions = LayoutOptions.StartAndExpand,
+                        Padding = 50,
+                        Children =
                             {
                                 groupLabel,
                                 groupTypeLabel,
                                 new Label(),
                                 lightSwitch
                             }
-                        }
-                    });
-
-                }
-                catch (Exception e)
-                {
-                    Alert("Error", $"Failed to load groups. {e.Message}", "OK");
-                }
+                    }
+                });
             }
+        }
+
+        private void CreateAllPage()
+        {
+            var allLabel = new Label
+            {
+                Text = "All",
+                FontSize = 12,
+                VerticalOptions = LayoutOptions.CenterAndExpand,
+                HorizontalOptions = LayoutOptions.CenterAndExpand
+            };
+
+            var allButton = new Button
+            {
+                Text = "Off"
+            };
+            allButton.Clicked += AllButton_Clicked;
+
+            Children.Add(new CirclePage
+            {
+                Content = new StackLayout
+                {
+                    VerticalOptions = LayoutOptions.StartAndExpand,
+                    Padding = 50,
+                    Children =
+                        {
+                            allLabel,
+                            new Label(),
+                            allButton
+                        }
+                }
+            });
+        }
+
+        private void AllButton_Clicked(object sender, EventArgs e)
+        {
+            HueHelper.KillAll();
         }
 
         async void Alert(string title, string message, string cancel)
