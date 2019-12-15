@@ -115,5 +115,14 @@ namespace SamsungGalaxyHueController
             var groups = GetGroups();
             return groups.Any(g => g.state.any_on);
         }
+
+        public static void KillAll()
+        {
+            var groups = GetGroups();
+            foreach (var group in groups)
+            {
+                SetGroupAction(group.id, false);
+            }
+        }
     }
 }
