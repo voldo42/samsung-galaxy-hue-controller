@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -19,14 +18,23 @@ namespace SamsungGalaxyHueController
             InitializeComponent();
 
             var groups = HueHelper.GetGroups();
+            var anyLightsOn = HueHelper.AnyLightsOn();
+            groups.Add(new Group { id = 0, name = "All", type = "", state = new GroupState { any_on = anyLightsOn } });
 
-            foreach (var group in groups)
+            foreach (var group in groups.OrderBy(g => g.id))
             {
                 try
                 {
                     var groupLabel = new Label
                     {
                         Text = group.name,
+                        VerticalOptions = LayoutOptions.CenterAndExpand,
+                        HorizontalOptions = LayoutOptions.CenterAndExpand
+                    };
+
+                    var groupTypeLabel = new Label
+                    {
+                        Text = group.type,
                         VerticalOptions = LayoutOptions.CenterAndExpand,
                         HorizontalOptions = LayoutOptions.CenterAndExpand
                     };
@@ -47,6 +55,7 @@ namespace SamsungGalaxyHueController
                             Children =
                             {
                                 groupLabel,
+                                groupTypeLabel,
                                 new Label(),
                                 lightSwitch
                             }
@@ -56,26 +65,26 @@ namespace SamsungGalaxyHueController
                 }
                 catch (Exception e)
                 {
-                    Alert("Oh oh!", e.Message, "OK");
+                    Alert("Error", $"Failed to load groups. {e.Message}", "OK");
                 }
             }
         }
 
-        async void Alert(string title, string message, string button)
+        async void Alert(string title, string message, string cancel)
         {
-            await DisplayAlert(title, message, message);
+            await DisplayAlert(title, message, cancel);
         }
 
         async void OnToggled(object sender, ToggledEventArgs e)
         {
             try
             {
-                var sexyJimbob = (Switch)sender;
-                var group = (Group)sexyJimbob.BindingContext;
+                var selectedGroup = (Switch)sender;
+                var group = (Group)selectedGroup.BindingContext;
 
                 HueHelper.SetGroupAction(group.id, e.Value);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await DisplayAlert("Error", $"Toggle failed. {ex.Message}", "OK");
             }

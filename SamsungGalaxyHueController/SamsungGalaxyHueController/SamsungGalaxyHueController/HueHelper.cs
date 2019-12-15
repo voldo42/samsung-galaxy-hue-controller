@@ -109,5 +109,11 @@ namespace SamsungGalaxyHueController
 
             }
         }
+
+        public static bool AnyLightsOn()
+        {
+            var groups = GetGroups();
+            return groups.Any(g => g.state.any_on);
+        }
     }
 }
